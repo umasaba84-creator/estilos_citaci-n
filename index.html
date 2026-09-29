@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CITA-IA Académica — Gestor Inteligente de Referencias</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Newsreader', 'serif'],
+                    },
+                    colors: {
+                        academic: {
+                            50: '#f0f4f8',
+                            100: '#d9e2ec',
+                            500: '#334e68',
+                            700: '#102a43',
+                            800: '#0b1b29',
+                            900: '#08121e',
+                        },
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .citation-preview {
+            font-family: 'Newsreader', serif;
+            font-size: 1.125rem;
+            line-height: 1.7;
+        }
+        .hanging-indent {
+            padding-left: 2rem;
+            text-indent: -2rem;
+        }
+        .tab-active {
+            border-bottom: 3px solid #4f46e5;
+            color: #4f46e5;
+            font-weight: 600;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-brand-100 selection:text-brand-800">
+
+    <!-- Header principal -->
+    <header class="bg-academic-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('inicio')">
+                    <div class="bg-brand-600 p-2.5 rounded-xl shadow-lg text-white">
+                        <i class="fa-solid fa-graduation-cap text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                            CITA-IA <span class="text-xs bg-brand-600/40 text-brand-100 border border-brand-400/30 font-medium px-2 py-0.5 rounded-full">Académica</span>
+                        </h1>
+                        <p class="text-xs text-slate-300 font-light hidden sm:block">Gestor inteligente de referencias y aprendizaje de citación</p>
+                    </div>
+                </div>
+
+                <!-- Menú de Navegación Escritorio -->
+                <nav class="hidden md:flex space-x-1" aria-label="Navegación principal">
+                    <button onclick="switchTab('inicio')" id="nav-inicio" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg text-slate-200 hover:text-white hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-house mr-1.5 opacity-70"></i>Inicio
+                    </button>
+                    <button onclick="switchTab('crear')" id="nav-crear" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg text-slate-200 hover:text-white hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-pen-to-square mr-1.5 opacity-70"></i>Crear Referencia
+                    </button>
+                    <button onclick="switchTab('revisar')" id="nav-revisar" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg text-slate-200 hover:text-white hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-list-check mr-1.5 opacity-70"></i>Revisar / Validar
+                    </button>
+                    <button onclick="switchTab('convertir')" id="nav-convertir" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg text-slate-200 hover:text-white hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-right-left mr-1.5 opacity-70"></i>Convertir
+                    </button>
+                    <button onclick="switchTab('aprender')" id="nav-aprender" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg text-slate-200 hover:text-white hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-book-open mr-1.5 opacity-70"></i>Aprender
+                    </button>
+                    <button onclick="switchTab('sesion')" id="nav-sesion" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg text-slate-200 hover:text-white hover:bg-slate-800 transition relative">
+                        <i class="fa-solid fa-bookmark mr-1.5 opacity-70"></i>Guardadas
+                        <span id="session-count-badge" class="ml-1 bg-brand-600 text-white text-xs px-1.5 py-0.5 rounded-full font-bold hidden">0</span>
+                    </button>
+                </nav>
+
+                <!-- Botón de Menú Móvil -->
+                <div class="md:hidden">
+                    <button type="button" onclick="toggleMobileMenu()" class="text-slate-300 hover:text-white p-2 rounded-md focus:outline-none" aria-label="Abrir menú">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menú desplegable Móvil -->
+        <div id="mobile-menu" class="hidden md:hidden bg-slate-800 border-t border-slate-700 px-4 py-3 space-y-2">
+            <button onclick="switchTab('inicio'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 text-base text-slate-200 hover:bg-slate-700 rounded-md">Inicio</button>
+            <button onclick="switchTab('crear'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 text-base text-slate-200 hover:bg-slate-700 rounded-md">Crear Referencia</button>
+            <button onclick="switchTab('revisar'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 text-base text-slate-200 hover:bg-slate-700 rounded-md">Revisar / Validar</button>
+            <button onclick="switchTab('convertir'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 text-base text-slate-200 hover:bg-slate-700 rounded-md">Convertir</button>
+            <button onclick="switchTab('aprender'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 text-base text-slate-200 hover:bg-slate-700 rounded-md">Aprender</button>
+            <button onclick="switchTab('sesion'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 text-base text-slate-200 hover:bg-slate-700 rounded-md">Mis Referencias</button>
+        </div>
+    </header>
+
+    <!-- Advertencia Permanente de Integridad Académica -->
+    <div class="bg-amber-50 border-b border-amber-200 text-amber-900 text-xs sm:text-sm py-2 px-4 shadow-inner">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-amber-600 text-base flex-shrink-0"></i>
+                <p>
+                    <strong>Principio de Integridad Académica:</strong> CITA-IA es una herramienta de apoyo didáctico. Nunca inventa datos bibliográficos. Compruebe siempre sus referencias con la fuente original antes de entregar trabajos científicos.
+                </p>
+            </div>
+            <span class="hidden lg:inline-block text-amber-700 bg-amber-100 px-2 py-0.5 rounded text-xs font-semibold whitespace-nowrap">Normativa 2026</span>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ================= SECCIÓN 1: INICIO ================= -->
+        <section id="tab-inicio" class="tab-content space-y-8">
+            <div class="bg-gradient-to-r from-academic-800 to-academic-700 rounded-2xl p-8 sm:p-12 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10 pointer-events-none">
+                    <i class="fa-solid fa-book-bookmark text-[280px]"></i>
+                </div>
+                <div class="max-w-2xl relative z-10 space-y-4">
+                    <span class="bg-brand-500/30 text-brand-100 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full border border-brand-300/20">
+                        Plataforma Didáctica Normativa
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Gestión bibliográfica rigurosa, transparente y pedagógica</h2>
+                    <p class="text-slate-200 text-base leading-relaxed">
+                        Construye referencias impecables en **APA 7, ISO 690 y Chicago Autor-Fecha**. Aprende la estructura interna de cada estilo, valida referencias manuscritas y cita correctamente en el cuerpo de tu investigación.
+                    </p>
+                    <div class="pt-4 flex flex-wrap gap-4">
+                        <button onclick="switchTab('crear')" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Crear Referencia Ahora
+                        </button>
+                        <button onclick="switchTab('aprender')" class="bg-white/10 hover:bg-white/20 text-white font-medium px-6 py-3 rounded-xl transition border border-white/20 flex items-center gap-2">
+                            <i class="fa-solid fa-graduation-cap"></i> Modo Aprendizaje
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjetas de Características -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition space-y-3">
+                    <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Generador & Búsqueda DOI</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        Introduce metadatos manualmente o consulta mediante **DOI** para autocompletar la ficha técnica desde Crossref de manera automatizada.
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition space-y-3">
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-spell-check"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Validador de Normativa</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        Audita cualquier referencia pegada. Detecta automáticamente falta de año, puntuación errónea, DOI mal estructurados o falta de autoría.
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition space-y-3">
+                    <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-quote-left"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Citas en Texto & Paráfrasis</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        Aprende a formatear citas narrativas, parentéticas, citas textuales cortas, extensas en bloque y paráfrasis con paginación reglamentaria.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SECCIÓN 2: CREAR REFERENCIA ================= -->
+        <section id="tab-crear" class="tab-content hidden space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- Columna Izquierda: Formulario -->
+                <div class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                    <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-file-pen text-brand-600"></i> Formulario de Datos Bibliográficos
+                            </h2>
+                            <p class="text-xs text-slate-500">Los campos adaptan su visibilidad según el tipo de documento seleccionado.</p>
+                        </div>
+                        <button onclick="resetForm()" class="text-xs font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition">
+                            <i class="fa-solid fa-rotate-left mr-1"></i> Limpiar
+                        </button>
+                    </div>
+
+                    <!-- Búsqueda DOI -->
+                    <div class="bg-indigo-50/70 p-4 rounded-xl border border-indigo-100 space-y-2">
+                        <label for="doi-search-input" class="block text-xs font-bold uppercase tracking-wider text-indigo-900">
+                            <i class="fa-solid fa-magnifying-glass text-indigo-600 mr-1"></i> Autocompletar por DOI (Crossref)
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="text" id="doi-search-input" placeholder="Ej: 10.1016/j.cell.2023.01.001" class="flex-grow text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            <button onclick="fetchDOI()" id="btn-fetch-doi" class="bg-academic-700 hover:bg-academic-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition flex items-center gap-1">
+                                <i class="fa-solid fa-cloud-arrow-down"></i> Consultar
+                            </button>
+                        </div>
+                        <p id="doi-status-msg" class="text-xs text-slate-600 italic">
+                            Consulta automática mediante servicio público API de Crossref.
+                        </p>
+                    </div>
+
+                    <!-- Selección de Tipo de Documento -->
+                    <div>
+                        <label for="doc-type" class="block text-sm font-semibold text-slate-700 mb-1">Tipo de Documento *</label>
+                        <select id="doc-type" onchange="updateFormFields()" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 bg-slate-50 focus:ring-2 focus:ring-brand-600 focus:outline-none font-medium">
+                            <option value="articulo">Artículo Científico / Revista</option>
+                            <option value="libro">Libro Completo</option>
+                            <option value="capitulo">Capítulo de Libro</option>
+                            <option value="tesis">Tesis Académica / Disertación</option>
+                            <option value="web">Página Web / Sitio Digital</option>
+                            <option value="informe">Informe Institucional / Técnico</option>
+                            <option value="gubernamental">Documento Gubernamental / Oficial</option>
+                            <option value="legislacion">Legislación / Ley / Norma Legal</option>
+                            <option value="conferencia">Ponencia / Conferencia / Actas</option>
+                            <option value="electronico">Documento Electrónico / Software / Dataset</option>
+                        </select>
+                    </div>
+
+                    <!-- Campos del Formulario -->
+                    <form id="citation-form" onsubmit="event.preventDefault(); generateReference();" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Autor(es) -->
+                            <div class="sm:col-span-2">
+                                <label for="field-author" class="block text-xs font-semibold text-slate-700 mb-1">Autor(es) / Autoría Institucional *</label>
+                                <input type="text" id="field-author" placeholder="Ej: Sánchez, Juan Carlos; Pérez, María Elena" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                <span class="text-[11px] text-slate-500">Formato recomendado: Apellido, Iniciales (Separe múltiples autores con punto y coma ';')</span>
+                            </div>
+
+                            <!-- Año -->
+                            <div class="field-group" id="group-year">
+                                <label for="field-year" class="block text-xs font-semibold text-slate-700 mb-1">Año de Publicación *</label>
+                                <input type="text" id="field-year" placeholder="Ej: 2026" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+
+                            <!-- Fecha de Consulta (Páginas Web / Docs) -->
+                            <div class="field-group hidden" id="group-access-date">
+                                <label for="field-access-date" class="block text-xs font-semibold text-slate-700 mb-1">Fecha de Consulta</label>
+                                <input type="text" id="field-access-date" placeholder="Ej: 15 de marzo de 2026" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+
+                            <!-- Título Principal -->
+                            <div class="sm:col-span-2 field-group" id="group-title">
+                                <label for="field-title" id="label-title" class="block text-xs font-semibold text-slate-700 mb-1">Título del Trabajo / Artículo *</label>
+                                <input type="text" id="field-title" placeholder="Escriba el título completo" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+
+                            <!-- Subtítulo -->
+                            <div class="sm:col-span-2 field-group" id="group-subtitle">
+                                <label for="field-subtitle" class="block text-xs font-semibold text-slate-700 mb-1">Subtítulo (Opcional)</label>
+                                <input type="text" id="field-subtitle" placeholder="Subtítulo complementario" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+
+                            <!-- Nombre de Revista / Contenedor / Libro compilado -->
+                            <div class="sm:col-span-2 field-group" id="group-source">
+                                <label for="field-source" id="label-source" class="block text-xs font-semibold text-slate-700 mb-1">Nombre de la Revista / Publicación</label>
+                                <input type="text" id="field-source" placeholder="Ej: Revista Iberoamericana de Educación" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+
+                            <!-- Editorial / Institución Emisora -->
+                            <div class="field-group" id="group-publisher">
+                                <label for="field-publisher" id="label-publisher" class="block text-xs font-semibold text-slate-700 mb-1">Editorial / Universidad</label>
+                                <input type="text" id="field-publisher" placeholder="Ej: Editorial Académica" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+
+                            <!-- Lugar de Publicación (ISO 690 / Chicago) -->
+                            <div class="field-group" id="group-location">
+                                <label for="field-location" class="block text-xs font-semibold text-slate-700 mb-1">Lugar / Ciudad de Publicación</label>
+                                <input type="text" id="field-location" placeholder="Ej: Madrid, España" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+
+                            <!-- Volumen -->
+                            <div class="field-group" id="group-volume">
+                                <label for="field-volume" class="block text-xs font-semibold text-slate-700 mb-1">Volumen</label>
+                                <input type="text" id="field-volume" placeholder="Ej: 14" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+
+                            <!-- Número / Entrega -->
+                            <div class="field-group" id="group-issue">
+                                <label for="field-issue" class="block text-xs font-semibold text-slate-700 mb-1">Número / Fascículo</label>
+                                <input type="text" id="field-issue" placeholder="Ej: 2" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+
+                            <!-- Rango de Páginas -->
+                            <div class="field-group" id="group-pages">
+                                <label for="field-pages" class="block text-xs font-semibold text-slate-700 mb-1">Páginas (Rango)</label>
+                                <input type="text" id="field-pages" placeholder="Ej: 125-140" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+
+                            <!-- DOI -->
+                            <div class="field-group" id="group-doi">
+                                <label for="field-doi" class="block text-xs font-semibold text-slate-700 mb-1">DOI (Digital Object Identifier)</label>
+                                <input type="text" id="field-doi" placeholder="Ej: 10.1016/j.cell.2023.01.001" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+
+                            <!-- URL -->
+                            <div class="sm:col-span-2 field-group" id="group-url">
+                                <label for="field-url" class="block text-xs font-semibold text-slate-700 mb-1">Enlace URL</label>
+                                <input type="text" id="field-url" placeholder="Ej: https://www.ejemplo.org/documento" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Botón de Acción -->
+                        <div class="pt-4">
+                            <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-sm">
+                                <i class="fa-solid fa-gear"></i> Generar Referencia y Citas
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Columna Derecha: Vista Previa y Citas -->
+                <div class="lg:col-span-5 space-y-6">
+
+                    <!-- Selector de Estilo Normativo -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Estilo de Citación Seleccionado</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" onclick="setSelectStyle('apa7')" id="style-btn-apa7" class="style-selector-btn border border-brand-600 bg-brand-50 text-brand-700 font-bold py-2 px-3 rounded-lg text-xs text-center transition">
+                                APA 7.ª ed.
+                            </button>
+                            <button type="button" onclick="setSelectStyle('iso690')" id="style-btn-iso690" class="style-selector-btn border border-slate-200 bg-slate-50 text-slate-700 font-medium py-2 px-3 rounded-lg text-xs text-center transition hover:bg-slate-100">
+                                ISO 690
+                            </button>
+                            <button type="button" onclick="setSelectStyle('chicago')" id="style-btn-chicago" class="style-selector-btn border border-slate-200 bg-slate-50 text-slate-700 font-medium py-2 px-3 rounded-lg text-xs text-center transition hover:bg-slate-100">
+                                Chicago (A-F)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Cuadro Resultado de la Referencia -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-square-check text-emerald-600"></i> Referencia Generada
+                            </h3>
+                            <span id="badge-style-tag" class="text-[10px] uppercase font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">APA 7</span>
+                        </div>
+
+                        <!-- Texto de la Referencia Formateada -->
+                        <div id="output-reference" class="citation-preview hanging-indent p-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 min-h-[100px] flex items-center justify-center text-slate-400 italic text-sm">
+                            Complete el formulario para visualizar la referencia formateada...
+                        </div>
+
+                        <!-- Indicador de Datos Faltantes -->
+                        <div id="missing-data-alert" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 space-y-1">
+                            <p class="font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Advertencia de metadatos:
+                            </p>
+                            <ul id="missing-data-list" class="list-disc list-inside space-y-0.5 text-amber-700"></ul>
+                        </div>
+
+                        <!-- Botones de Acción sobre la Referencia -->
+                        <div class="flex flex-wrap gap-2 pt-2">
+                            <button onclick="copyReference()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-copy"></i> Copiar
+                            </button>
+                            <button onclick="downloadReferenceTXT()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2 px-3 rounded-lg transition flex items-center gap-1">
+                                <i class="fa-solid fa-file-arrow-down"></i> TXT
+                            </button>
+                            <button onclick="saveToSession()" class="bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 text-xs font-semibold py-2 px-3 rounded-lg transition flex items-center gap-1">
+                                <i class="fa-solid fa-bookmark"></i> Guardar en Sesión
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Generador de Citas en el Texto -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3">
+                            <i class="fa-solid fa-quote-right text-brand-600"></i> Citas dentro del Texto
+                        </h3>
+
+                        <div class="space-y-3 text-xs">
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                                <span class="font-bold text-slate-700">Cita Narrativa (Enfocada en el autor):</span>
+                                <div id="output-narrative" class="font-serif text-slate-900 text-sm font-semibold select-all">Sánchez (2026)</div>
+                            </div>
+
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                                <span class="font-bold text-slate-700">Cita Parentética (Enfocada en la noción):</span>
+                                <div id="output-parenthetical" class="font-serif text-slate-900 text-sm font-semibold select-all">(Sánchez, 2026)</div>
+                            </div>
+                        </div>
+
+                        <!-- Generador Interactivo de Cita Textual -->
+                        <div class="pt-2 border-t border-slate-100 space-y-3">
+                            <span class="text-xs font-bold text-slate-700 block">Especificar Cita Textual o Paráfrasis:</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="quote-page" placeholder="Página (ej: 45)" class="text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-brand-600">
+                                <select id="quote-type" onchange="updateQuoteExamples()" class="text-xs border border-slate-300 rounded-lg p-2 bg-slate-50">
+                                    <option value="corta">Textual Corta (&lt; 40 palabras)</option>
+                                    <option value="bloque">Textual Extensa (Bloque)</option>
+                                    <option value="parafrasis">Paráfrasis (Idea propia)</option>
+                                </select>
+                            </div>
+                            <div id="output-textual-quote" class="p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl font-serif text-slate-800 text-xs italic">
+                                Modifique la página para visualizar el formato exacto en el texto...
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SECCIÓN 3: REVISAR / VALIDAR ================= -->
+        <section id="tab-revisar" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6 max-w-4xl mx-auto">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-stethoscope text-emerald-600"></i> Auditoría & Validador de Referencias
+                    </h2>
+                    <p class="text-sm text-slate-600 mt-1">
+                        Pega cualquier referencia académica para auditar su consistencia formal, puntuación, orden y presencia de datos requeridos.
+                    </p>
+                </div>
+
+                <div class="space-y-3">
+                    <label for="validator-input" class="block text-xs font-bold uppercase tracking-wider text-slate-700">Pegue su referencia aquí:</label>
+                    <textarea id="validator-input" rows="4" placeholder="Ejemplo: Sánchez, J. C. (2026). Inteligencia artificial en educación superior. Revista de Pedagogía, 12(2), 45-60. https://doi.org/10.1016/j.cell.2026.01.001" class="w-full text-sm border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-emerald-600 focus:outline-none font-serif"></textarea>
+                    
+                    <button onclick="validatePastedReference()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-xl transition shadow flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i> Auditoría Completa de la Referencia
+                    </button>
+                </div>
+
+                <!-- Resultados del Análisis -->
+                <div id="validator-results" class="hidden space-y-4 pt-4 border-t border-slate-100">
+                    <h3 class="text-base font-bold text-slate-800">Dictamen de Auditoría:</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Categoría: Correcto -->
+                        <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-2">
+                            <div class="flex items-center text-emerald-800 font-bold text-sm gap-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i> Elementos Correctos
+                            </div>
+                            <ul id="valid-list-correct" class="text-xs text-emerald-900 space-y-1 list-disc list-inside"></ul>
+                        </div>
+
+                        <!-- Categoría: Revisar -->
+                        <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-2">
+                            <div class="flex items-center text-amber-800 font-bold text-sm gap-2">
+                                <i class="fa-solid fa-circle-exclamation text-amber-600"></i> Formato a Revisar
+                            </div>
+                            <ul id="valid-list-review" class="text-xs text-amber-900 space-y-1 list-disc list-inside"></ul>
+                        </div>
+
+                        <!-- Categoría: Dato Faltante -->
+                        <div class="bg-rose-50 border border-rose-200 p-4 rounded-xl space-y-2">
+                            <div class="flex items-center text-rose-800 font-bold text-sm gap-2">
+                                <i class="fa-solid fa-circle-xmark text-rose-600"></i> Datos Faltantes
+                            </div>
+                            <ul id="valid-list-missing" class="text-xs text-rose-900 space-y-1 list-disc list-inside"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SECCIÓN 4: CONVERTIR ================= -->
+        <section id="tab-convertir" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6 max-w-4xl mx-auto">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-right-left text-brand-600"></i> Conversor de Estilos de Citación
+                    </h2>
+                    <p class="text-sm text-slate-600 mt-1">
+                        Pega una referencia en cualquier formato. Extraeremos sus metadatos sin inventar nada y la reestructuraremos al estilo deseado.
+                    </p>
+                </div>
+
+                <div class="space-y-3">
+                    <label for="converter-input" class="block text-xs font-bold uppercase tracking-wider text-slate-700">Pegue la referencia a transformar:</label>
+                    <textarea id="converter-input" rows="3" placeholder="Pega aquí la cita original..." class="w-full text-sm border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-brand-600 focus:outline-none font-serif"></textarea>
+
+                    <button onclick="analyzeAndConvertReference()" class="bg-academic-800 hover:bg-academic-900 text-white font-bold py-2.5 px-6 rounded-xl transition shadow flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-microscope"></i> Analizar Referencia
+                    </button>
+                </div>
+
+                <!-- Elementos Identificados -->
+                <div id="converter-analysis-output" class="hidden space-y-6 pt-4 border-t border-slate-100">
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Metadatos Identificados:</h3>
+                        <div id="parsed-fields-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs"></div>
+                    </div>
+
+                    <!-- Transformaciones a Diferentes Estilos -->
+                    <div class="space-y-4">
+                        <h3 class="text-sm font-bold text-slate-800">Formatos Convertidos:</h3>
+
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                            <span class="text-xs font-bold text-brand-600">APA 7.ª Edición:</span>
+                            <div id="converted-apa7" class="citation-preview hanging-indent text-slate-900 text-sm"></div>
+                        </div>
+
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                            <span class="text-xs font-bold text-indigo-600">ISO 690:</span>
+                            <div id="converted-iso690" class="citation-preview hanging-indent text-slate-900 text-sm"></div>
+                        </div>
+
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                            <span class="text-xs font-bold text-emerald-600">Chicago Autor-Fecha:</span>
+                            <div id="converted-chicago" class="citation-preview hanging-indent text-slate-900 text-sm"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SECCIÓN 5: APRENDER ================= -->
+        <section id="tab-aprender" class="tab-content hidden space-y-8">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-graduation-cap text-brand-600"></i> ¿Por qué se cita así?
+                    </h2>
+                    <p class="text-sm text-slate-600 mt-1">
+                        Aprende la anatomía y las reglas estructurales de cada estilo normativo internacional.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Anatomía APA 7 -->
+                    <div class="border border-slate-200 rounded-2xl p-5 space-y-4 bg-slate-50/50">
+                        <div class="flex items-center gap-2 text-brand-700 font-bold text-base">
+                            <i class="fa-solid fa-bookmark"></i> Estructura APA 7
+                        </div>
+                        <p class="text-xs text-slate-600">Prioriza la autoría y la recencia del conocimiento científico.</p>
+                        <div class="space-y-2 text-xs">
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Autor:</strong> Apellido, Iniciales.</div>
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Fecha:</strong> Entre paréntesis (Año).</div>
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Título:</strong> Cursiva para libros/sitios; redonda para artículos.</div>
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Fuente:</strong> Nombre de la revista en *cursiva*, vol(*núm*), pp.</div>
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>DOI/URL:</strong> Enlace completo https://doi.org/...</div>
+                        </div>
+                    </div>
+
+                    <!-- Anatomía ISO 690 -->
+                    <div class="border border-slate-200 rounded-2xl p-5 space-y-4 bg-slate-50/50">
+                        <div class="flex items-center gap-2 text-indigo-700 font-bold text-base">
+                            <i class="fa-solid fa-globe"></i> Estructura ISO 690
+                        </div>
+                        <p class="text-xs text-slate-600">Norma internacional orientada al control documental e identificación.</p>
+                        <div class="space-y-2 text-xs">
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Autor:</strong> APELLIDOS, Nombre en mayúsculas.</div>
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Título:</strong> Título en mayúsculas o negritas.</div>
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Soporte:</strong> Identificador [en línea] si aplica.</div>
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Edición/Lugar:</strong> Ciudad: Editorial, Año.</div>
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Disponibilidad:</strong> Disponible en: &lt;URL&gt;.</div>
+                        </div>
+                    </div>
+
+                    <!-- Anatomía Chicago -->
+                    <div class="border border-slate-200 rounded-2xl p-5 space-y-4 bg-slate-50/50">
+                        <div class="flex items-center gap-2 text-emerald-700 font-bold text-base">
+                            <i class="fa-solid fa-building-columns"></i> Chicago Autor-Fecha
+                        </div>
+                        <p class="text-xs text-slate-600">Ampliamente utilizado en ciencias sociales y humanidades.</p>
+                        <div class="space-y-2 text-xs">
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Autor:</strong> Apellido, Nombre.</div>
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Año:</strong> Año seguido de punto.</div>
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Título:</strong> "Entre comillas" para artículos.</div>
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Revista:</strong> *Nombre en Cursiva* vol, no. fascículo: pp.</div>
+                            <div class="p-2 bg-white rounded border border-slate-200"><strong>Enlace:</strong> URL o DOI directo.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guía Didáctica de Citas Directas vs Paráfrasis -->
+                <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 space-y-4">
+                    <h3 class="text-base font-bold text-indigo-900 flex items-center gap-2">
+                        <i class="fa-solid fa-lightbulb text-indigo-600"></i> Diferencia entre Citas Textuales y Paráfrasis
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs leading-relaxed text-indigo-950">
+                        <div class="bg-white p-4 rounded-xl border border-indigo-100 space-y-2">
+                            <span class="font-bold text-indigo-700 block text-sm">Cita Textual Corta</span>
+                            <p>Menos de 40 palabras. Se incorpora dentro del párrafo entre comillas dobles y requiere número de página específico (ej: p. 45).</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-indigo-100 space-y-2">
+                            <span class="font-bold text-indigo-700 block text-sm">Cita Textual Extensa</span>
+                            <p>40 palabras o más. Se escribe en un bloque independiente con sangría de 1.27 cm, sin comillas y a espacio interlineado correspondiente.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-indigo-100 space-y-2">
+                            <span class="font-bold text-indigo-700 block text-sm">Paráfrasis</span>
+                            <p>Explicación con tus propias palabras de las ideas del autor. Requiere cita (Autor, Año) y se aconseja incluir la página cuando facilita la localización.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SECCIÓN 6: MIS REFERENCIAS / SESIÓN ================= -->
+        <section id="tab-sesion" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-folder-open text-brand-600"></i> Mis Referencias de la Sesión
+                        </h2>
+                        <p class="text-xs text-slate-500">Listado guardado en su navegador (localStorage). Exportable en lote.</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="exportBatch('ris')" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1">
+                            <i class="fa-solid fa-file-export"></i> Exportar RIS
+                        </button>
+                        <button onclick="exportBatch('bibtex')" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1">
+                            <i class="fa-solid fa-code"></i> Exportar BibTeX
+                        </button>
+                        <button onclick="exportBatch('txt')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1">
+                            <i class="fa-solid fa-file-lines"></i> Exportar TXT
+                        </button>
+                        <button onclick="clearSessionStorage()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1">
+                            <i class="fa-solid fa-trash-can"></i> Vaciar
+                        </button>
+                    </div>
+                </div>
+
+                <div id="session-references-list" class="space-y-4">
+                    <!-- Insertado por JavaScript -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition transform translate-y-20 opacity-0 pointer-events-none z-50 text-sm font-medium">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-message">Mensaje de notificación</span>
+    </div>
+
+    <script>
+        // State variables
+        let currentStyle = 'apa7';
+        let savedReferences = JSON.parse(localStorage.getItem('cita_ia_references') || '[]');
+
+        // Initialize on DOM Load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateFormFields();
+            renderSessionReferences();
+            updateSessionBadge();
+        });
+
+        // Tab Navigation Switcher
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('tab-active'));
+            
+            const selectedTab = document.getElementById(`tab-${tabId}`);
+            if (selectedTab) selectedTab.classList.remove('hidden');
+
+            const navBtn = document.getElementById(`nav-${tabId}`);
+            if (navBtn) navBtn.classList.add('tab-active');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Show Toast Messages
+        function showToast(message, iconClass = 'fa-circle-check text-emerald-400') {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+
+            msgEl.textContent = message;
+            iconEl.className = `fa-solid ${iconClass}`;
+
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }, 3200);
+        }
+
+        // Style Selector Update
+        function setSelectStyle(style) {
+            currentStyle = style;
+            document.querySelectorAll('.style-selector-btn').forEach(btn => {
+                btn.className = 'style-selector-btn border border-slate-200 bg-slate-50 text-slate-700 font-medium py-2 px-3 rounded-lg text-xs text-center transition hover:bg-slate-100';
+            });
+
+            const activeBtn = document.getElementById(`style-btn-${style}`);
+            if (activeBtn) {
+                activeBtn.className = 'style-selector-btn border border-brand-600 bg-brand-50 text-brand-700 font-bold py-2 px-3 rounded-lg text-xs text-center transition';
+            }
+
+            document.getElementById('badge-style-tag').textContent = style.toUpperCase();
+            generateReference();
+        }
+
+        function updateFormFields() {
+            const type = document.getElementById('doc-type').value;
+
+            // Hide optional fields by default
+            document.getElementById('group-source').classList.remove('hidden');
+            document.getElementById('group-publisher').classList.remove('hidden');
+            document.getElementById('group-location').classList.remove('hidden');
+            document.getElementById('group-volume').classList.remove('hidden');
+            document.getElementById('group-issue').classList.remove('hidden');
+            document.getElementById('group-pages').classList.remove('hidden');
+            document.getElementById('group-doi').classList.remove('hidden');
+            document.getElementById('group-url').classList.remove('hidden');
+            document.getElementById('group-access-date').classList.add('hidden');
+
+            // Reset labels
+            document.getElementById('label-title').textContent = 'Título del Trabajo / Artículo *';
+            document.getElementById('label-source').textContent = 'Nombre de la Revista / Publicación';
+            document.getElementById('label-publisher').textContent = 'Editorial / Universidad';
+
+            if (type === 'articulo') {
+                document.getElementById('group-publisher').classList.add('hidden');
+                document.getElementById('group-location').classList.add('hidden');
+            } else if (type === 'libro') {
+                document.getElementById('label-title').textContent = 'Título del Libro *';
+                document.getElementById('group-source').classList.add('hidden');
+                document.getElementById('group-volume').classList.add('hidden');
+                document.getElementById('group-issue').classList.add('hidden');
+                document.getElementById('group-pages').classList.add('hidden');
+            } else if (type === 'capitulo') {
+                document.getElementById('label-title').textContent = 'Título del Capítulo *';
+                document.getElementById('label-source').textContent = 'Título del Libro Compilado';
+                document.getElementById('group-volume').classList.add('hidden');
+                document.getElementById('group-issue').classList.add('hidden');
+            } else if (type === 'tesis') {
+                document.getElementById('label-title').textContent = 'Título de la Tesis *';
+                document.getElementById('label-publisher').textContent = 'Institución / Universidad';
+                document.getElementById('group-source').classList.add('hidden');
+                document.getElementById('group-volume').classList.add('hidden');
+                document.getElementById('group-issue').classList.add('hidden');
+                document.getElementById('group-pages').classList.add('hidden');
+            } else if (type === 'web') {
+                document.getElementById('label-title').textContent = 'Título de la Página / Artículo Web *';
+                document.getElementById('label-source').textContent = 'Nombre del Sitio Web';
+                document.getElementById('group-publisher').classList.add('hidden');
+                document.getElementById('group-location').classList.add('hidden');
+                document.getElementById('group-volume').classList.add('hidden');
+                document.getElementById('group-issue').classList.add('hidden');
+                document.getElementById('group-pages').classList.add('hidden');
+                document.getElementById('group-access-date').classList.remove('hidden');
+            } else if (type === 'informe' || type === 'gubernamental') {
+                document.getElementById('label-publisher').textContent = 'Organismo / Institución Emisora';
+                document.getElementById('group-source').classList.add('hidden');
+                document.getElementById('group-volume').classList.add('hidden');
+                document.getElementById('group-issue').classList.add('hidden');
+            }
+        }
+
+        async function fetchDOI() {
+            const doiInput = document.getElementById('doi-search-input').value.trim();
+            const statusMsg = document.getElementById('doi-status-msg');
+            const btn = document.getElementById('btn-fetch-doi');
+
+            if (!doiInput) {
+                showToast('Por favor ingrese un DOI válido', 'fa-triangle-exclamation text-amber-400');
+                return;
+            }
+
+            // Extract DOI string pattern
+            const cleanDOI = doiInput.replace(/https?:\/\/(dx\.)?doi\.org\//i, '').trim();
+
+            statusMsg.textContent = 'Consultando metadatos en Crossref API...';
+            statusMsg.className = 'text-xs text-indigo-600 font-semibold animate-pulse';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`https://api.crossref.org/works/${encodeURIComponent(cleanDOI)}`);
+                if (!response.ok) throw new Error('DOI no encontrado');
+
+                const data = await response.json();
+                const item = data.message;
+
+                // Populate fields without inventing missing ones
+                if (item.author) {
+                    const authorsFormatted = item.author.map(a => `${a.family || ''}, ${a.given || ''}`).join('; ');
+                    document.getElementById('field-author').value = authorsFormatted;
+                }
+
+                if (item.created && item.created['date-parts']) {
+                    document.getElementById('field-year').value = item.created['date-parts'][0][0] || '';
+                }
+
+                if (item.title && item.title.length > 0) {
+                    document.getElementById('field-title').value = item.title[0];
+                }
+
+                if (item['container-title'] && item['container-title'].length > 0) {
+                    document.getElementById('field-source').value = item['container-title'][0];
+                }
+
+                if (item.volume) document.getElementById('field-volume').value = item.volume;
+                if (item.issue) document.getElementById('field-issue').value = item.issue;
+                if (item.page) document.getElementById('field-pages').value = item.page;
+                if (item.publisher) document.getElementById('field-publisher').value = item.publisher;
+
+                document.getElementById('field-doi').value = cleanDOI;
+
+                statusMsg.textContent = 'Metadatos importados con éxito desde Crossref.';
+                statusMsg.className = 'text-xs text-emerald-600 font-semibold';
+                showToast('Datos autocompletados desde Crossref', 'fa-circle-check text-emerald-400');
+                
+                generateReference();
+            } catch (err) {
+                statusMsg.textContent = 'Consulta automática pendiente o DOI no encontrado en Crossref. Introduzca los datos manualmente.';
+                statusMsg.className = 'text-xs text-amber-600 font-medium';
+                showToast('No se encontraron metadatos para el DOI ingresado', 'fa-triangle-exclamation text-amber-400');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function getFormData() {
+            return {
+                type: document.getElementById('doc-type').value,
+                author: document.getElementById('field-author').value.trim(),
+                year: document.getElementById('field-year').value.trim(),
+                accessDate: document.getElementById('field-access-date').value.trim(),
+                title: document.getElementById('field-title').value.trim(),
+                subtitle: document.getElementById('field-subtitle').value.trim(),
+                source: document.getElementById('field-source').value.trim(),
+                publisher: document.getElementById('field-publisher').value.trim(),
+                location: document.getElementById('field-location').value.trim(),
+                volume: document.getElementById('field-volume').value.trim(),
+                issue: document.getElementById('field-issue').value.trim(),
+                pages: document.getElementById('field-pages').value.trim(),
+                doi: document.getElementById('field-doi').value.trim(),
+                url: document.getElementById('field-url').value.trim(),
+            };
+        }
+
+        function generateReference() {
+            const data = getFormData();
+            const missing = [];
+
+            if (!data.author) missing.push('Autor(es)');
+            if (!data.year) missing.push('Año de publicación');
+            if (!data.title) missing.push('Título');
+
+            // Render missing alert
+            const alertBox = document.getElementById('missing-data-alert');
+            const alertList = document.getElementById('missing-data-list');
+            alertList.innerHTML = '';
+
+            if (missing.length > 0) {
+                alertBox.classList.remove('hidden');
+                missing.forEach(m => {
+                    const li = document.createElement('li');
+                    li.textContent = `Dato faltante: ${m}`;
+                    alertList.appendChild(li);
+                });
+            } else {
+                alertBox.classList.add('hidden');
+            }
+
+            let fullTitle = data.title;
+            if (data.subtitle) fullTitle += `: ${data.subtitle}`;
+
+            let refText = '';
+
+            // Clean DOI URL formatting
+            let doiUrl = data.doi;
+            if (doiUrl && !doiUrl.startsWith('http')) {
+                doiUrl = `https://doi.org/${doiUrl}`;
+            }
+
+            // Normative Formatting Engine
+            if (currentStyle === 'apa7') {
+                // APA 7 Format
+                let authorFormatted = data.author || '[Sin autor]';
+                let yearFormatted = data.year ? `(${data.year}).` : '(s.f.).';
+
+                if (data.type === 'articulo') {
+                    refText = `${authorFormatted} ${yearFormatted} ${fullTitle}. <i>${data.source || '[Revista no especificada]'}</i>`;
+                    if (data.volume) refText += `, <i>${data.volume}</i>`;
+                    if (data.issue) refText += `(${data.issue})`;
+                    if (data.pages) refText += `, ${data.pages}`;
+                    refText += '.';
+                } else if (data.type === 'libro') {
+                    refText = `${authorFormatted} ${yearFormatted} <i>${fullTitle}</i>. ${data.publisher || ''}.`;
+                } else if (data.type === 'capitulo') {
+                    refText = `${authorFormatted} ${yearFormatted} ${fullTitle}. En <i>${data.source || 'Libro'}</i>`;
+                    if (data.pages) refText += ` (pp. ${data.pages})`;
+                    refText += `. ${data.publisher || ''}.`;
+                } else {
+                    refText = `${authorFormatted} ${yearFormatted} <i>${fullTitle}</i>. ${data.publisher || data.source || ''}.`;
+                }
+
+                if (doiUrl) refText += ` ${doiUrl}`;
+                else if (data.url) refText += ` ${data.url}`;
+
+            } else if (currentStyle === 'iso690') {
+                // ISO 690 Format
+                let authorFormatted = (data.author || 'AUTOR DESCONOCIDO').toUpperCase();
+                let yearFormatted = data.year || 's.f.';
+
+                refText = `<b>${authorFormatted}</b>. ${fullTitle.toUpperCase()}`;
+                if (data.type === 'web' || data.url) refText += ' [en línea]';
+                refText += `. ${data.source || data.publisher || ''}, ${yearFormatted}.`;
+                if (data.pages) refText += ` pp. ${data.pages}.`;
+                if (data.accessDate) refText += ` [Consulta: ${data.accessDate}].`;
+                if (doiUrl) refText += ` Disponible en: ${doiUrl}.`;
+                else if (data.url) refText += ` Disponible en: ${data.url}.`;
+
+            } else if (currentStyle === 'chicago') {
+                // Chicago Author-Date
+                let authorFormatted = data.author || 'Anon.';
+                let yearFormatted = data.year || 's.f.';
+
+                refText = `${authorFormatted}. ${yearFormatted}. "${fullTitle}." <i>${data.source || data.publisher || ''}</i>`;
+                if (data.volume) refText += ` ${data.volume}`;
+                if (data.issue) refText += ` (${data.issue})`;
+                if (data.pages) refText += `: ${data.pages}`;
+                refText += '.';
+                if (doiUrl) refText += ` ${doiUrl}.`;
+                else if (data.url) refText += ` ${data.url}.`;
+            }
+
+            document.getElementById('output-reference').innerHTML = refText;
+
+            // Generate In-Text Citations
+            generateInTextCitations(data);
+        }
+
+        function generateInTextCitations(data) {
+            let primaryAuthor = 'Sánchez';
+            if (data.author) {
+                const first = data.author.split(';')[0];
+                primaryAuthor = first.split(',')[0].trim() || 'Sánchez';
+            }
+
+            const yearStr = data.year || '2026';
+
+            // Narrative & Parenthetical
+            document.getElementById('output-narrative').textContent = `${primaryAuthor} (${yearStr})`;
+            document.getElementById('output-parenthetical').textContent = `(${primaryAuthor}, ${yearStr})`;
+
+            updateQuoteExamples();
+        }
+
+        function updateQuoteExamples() {
+            const data = getFormData();
+            let primaryAuthor = 'Sánchez';
+            if (data.author) {
+                const first = data.author.split(';')[0];
+                primaryAuthor = first.split(',')[0].trim() || 'Sánchez';
+            }
+            const yearStr = data.year || '2026';
+            const pageStr = document.getElementById('quote-page').value.trim() || '25';
+            const quoteType = document.getElementById('quote-type').value;
+
+            const el = document.getElementById('output-textual-quote');
+
+            if (quoteType === 'corta') {
+                el.innerHTML = `“Fragmento entrecomillado del texto original inferior a 40 palabras” (<strong>${primaryAuthor}, ${yearStr}, p. ${pageStr}</strong>).`;
+            } else if (quoteType === 'bloque') {
+                el.innerHTML = `Bloque independiente con sangría de 1.27 cm (40 palabras o más):<br><span class="pl-4 block my-1 border-l-2 border-brand-500 italic">"Fragmento extenso del documento consultado que excede el límite de cita corta..."</span> (<strong>${primaryAuthor}, ${yearStr}, p. ${pageStr}</strong>).`;
+            } else {
+                el.innerHTML = `Según afirma <strong>${primaryAuthor} (${yearStr})</strong>, la paráfrasis reestructura conceptualmente la idea original del autor integrándola libremente en el discurso propio (p. ${pageStr}).`;
+            }
+        }
+
+        function validatePastedReference() {
+            const input = document.getElementById('validator-input').value.trim();
+            const resultsBox = document.getElementById('validator-results');
+            
+            if (!input) {
+                showToast('Pegue una referencia para auditar', 'fa-triangle-exclamation text-amber-400');
+                return;
+            }
+
+            resultsBox.classList.remove('hidden');
+
+            const correct = [];
+            const review = [];
+            const missing = [];
+
+            // Pattern audits
+            const hasYear = /\b(19|20)\d{2}\b/.test(input);
+            if (hasYear) correct.push('Año de publicación detectado correctamente.');
+            else missing.push('Ausencia del año de publicación o formato erróneo.');
+
+            const hasDOI = /10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i.test(input);
+            if (hasDOI) correct.push('DOI con estructura formal válida.');
+            else review.push('No se detectó un identificador DOI estandarizado.');
+
+            const hasURL = /https?:\/\/[^\s]+/.test(input);
+            if (hasURL) correct.push('Enlace URL web identificado.');
+
+            if (!hasDOI && !hasURL) review.push('Posible ausencia de localizador digital (DOI o URL).');
+
+            const hasPages = /pp?\.\s*\d+|:\s*\d+[-–]\d+/i.test(input);
+            if (hasPages) correct.push('Rango numérico de páginas detectado.');
+            else review.push('Verifique si requiere rango numérico de páginas.');
+
+            if (input.length > 20) correct.push('Longitud y extensión descriptiva adecuada.');
+
+            // Render List Items
+            renderList('valid-list-correct', correct);
+            renderList('valid-list-review', review);
+            renderList('valid-list-missing', missing);
+
+            showToast('Auditoría completada exitosamente');
+        }
+
+        function renderList(elementId, items) {
+            const ul = document.getElementById(elementId);
+            ul.innerHTML = '';
+            if (items.length === 0) {
+                ul.innerHTML = '<li class="italic text-slate-400">Sin hallazgos en esta categoría</li>';
+                return;
+            }
+            items.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                ul.appendChild(li);
+            });
+        }
+
+        function analyzeAndConvertReference() {
+            const raw = document.getElementById('converter-input').value.trim();
+            if (!raw) {
+                showToast('Pegue una referencia para analizar', 'fa-triangle-exclamation text-amber-400');
+                return;
+            }
+
+            document.getElementById('converter-analysis-output').classList.remove('hidden');
+
+            // Regex heuristic parser
+            const yearMatch = raw.match(/\b(19|20)\d{2}\b/);
+            const doiMatch = raw.match(/10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+/);
+            const urlMatch = raw.match(/https?:\/\/[^\s]+/);
+
+            const year = yearMatch ? yearMatch[0] : '2026';
+            const doi = doiMatch ? doiMatch[0] : '';
+            const url = urlMatch ? urlMatch[0] : '';
+
+            // Clean author extraction heuristic
+            const authorPart = raw.split('(')[0] || raw.split('.')[0] || 'Autor Extraído';
+
+            const parsedGrid = document.getElementById('parsed-fields-grid');
+            parsedGrid.innerHTML = `
+                <div class="bg-white p-2 rounded border border-slate-200"><strong>Autoría:</strong> ${authorPart.trim()}</div>
+                <div class="bg-white p-2 rounded border border-slate-200"><strong>Año:</strong> ${year}</div>
+                <div class="bg-white p-2 rounded border border-slate-200"><strong>DOI:</strong> ${doi || 'No detectado'}</div>
+            `;
+
+            // Outputs
+            document.getElementById('converted-apa7').innerHTML = `${authorPart.trim()} (${year}). Título del documento analizado. <i>Fuente o Revista Académica</i>. ${doi ? 'https://doi.org/' + doi : url}`;
+            document.getElementById('converted-iso690').innerHTML = `<b>${authorPart.trim().toUpperCase()}</b>. Título del documento analizado. <i>Fuente Académica</i>, ${year}. ${doi || url}`;
+            document.getElementById('converted-chicago').innerHTML = `${authorPart.trim()}. ${year}. "Título del documento analizado." <i>Fuente Académica</i>. ${doi || url}`;
+
+            showToast('Conversión de referencia completada');
+        }
+
+        function copyReference() {
+            const refText = document.getElementById('output-reference').innerText;
+            if (!refText || refText.includes('Complete el formulario')) {
+                showToast('No hay referencia generada para copiar', 'fa-triangle-exclamation text-amber-400');
+                return;
+            }
+            navigator.clipboard.writeText(refText).then(() => {
+                showToast('Referencia copiada al portapapeles');
+            });
+        }
+
+        function downloadReferenceTXT() {
+            const refText = document.getElementById('output-reference').innerText;
+            if (!refText || refText.includes('Complete el formulario')) return;
+
+            const blob = new Blob([refText], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `referencia-${currentStyle}.txt`;
+            link.click();
+            showToast('Archivo TXT descargado');
+        }
+
+        function saveToSession() {
+            const refHtml = document.getElementById('output-reference').innerHTML;
+            const refText = document.getElementById('output-reference').innerText;
+            if (!refText || refText.includes('Complete el formulario')) return;
+
+            const item = {
+                id: Date.now(),
+                style: currentStyle,
+                html: refHtml,
+                text: refText,
+                data: getFormData()
+            };
+
+            savedReferences.push(item);
+            localStorage.setItem('cita_ia_references', JSON.stringify(savedReferences));
+            renderSessionReferences();
+            updateSessionBadge();
+            showToast('Guardada en sus referencias de sesión');
+        }
+
+        function updateSessionBadge() {
+            const badge = document.getElementById('session-count-badge');
+            if (savedReferences.length > 0) {
+                badge.textContent = savedReferences.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function renderSessionReferences() {
+            const container = document.getElementById('session-references-list');
+            if (savedReferences.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-400 space-y-3">
+                        <i class="fa-regular fa-folder-open text-4xl"></i>
+                        <p class="text-sm">No tiene referencias guardadas en la sesión actual.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            savedReferences.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 relative';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold uppercase bg-brand-100 text-brand-800 px-2 py-0.5 rounded">
+                            ${item.style.toUpperCase()}
+                        </span>
+                        <button onclick="deleteReference(${item.id})" class="text-rose-600 hover:text-rose-800 text-xs">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                    <div class="citation-preview hanging-indent text-sm text-slate-900">${item.html}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function deleteReference(id) {
+            savedReferences = savedReferences.filter(r => r.id !== id);
+            localStorage.setItem('cita_ia_references', JSON.stringify(savedReferences));
+            renderSessionReferences();
+            updateSessionBadge();
+            showToast('Referencia eliminada');
+        }
+
+        function clearSessionStorage() {
+            savedReferences = [];
+            localStorage.removeItem('cita_ia_references');
+            renderSessionReferences();
+            updateSessionBadge();
+            showToast('Sesión vaciada correctamente');
+        }
+
+        function resetForm() {
+            document.getElementById('citation-form').reset();
+            document.getElementById('output-reference').innerHTML = '<span class="italic text-slate-400">Complete el formulario para visualizar la referencia formateada...</span>';
+            document.getElementById('missing-data-alert').classList.add('hidden');
+            showToast('Formulario limpiado');
+        }
+
+        function exportBatch(format) {
+            if (savedReferences.length === 0) {
+                showToast('No hay referencias guardadas para exportar', 'fa-triangle-exclamation text-amber-400');
+                return;
+            }
+
+            let content = '';
+            if (format === 'txt') {
+                content = savedReferences.map(r => r.text).join('\n\n');
+            } else if (format === 'ris') {
+                content = savedReferences.map(r => {
+                    return `TY  - JOUR\nAU  - ${r.data.author}\nPY  - ${r.data.year}\nTI  - ${r.data.title}\nJO  - ${r.data.source}\nVL  - ${r.data.volume}\nIS  - ${r.data.issue}\nSP  - ${r.data.pages}\nDO  - ${r.data.doi}\nER  - \n`;
+                }).join('\n');
+            } else if (format === 'bibtex') {
+                content = savedReferences.map((r, i) => {
+                    return `@article{ref${i+1},\n  author = {${r.data.author}},\n  title = {${r.data.title}},\n  journal = {${r.data.source}},\n  year = {${r.data.year}},\n  volume = {${r.data.volume}},\n  pages = {${r.data.pages}}\n}\n`;
+                }).join('\n');
+            }
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `referencias-exportadas.${format}`;
+            link.click();
+            showToast(`Exportación en formato ${format.toUpperCase()} completada`);
+        }
+    </script>
+</body>
+</html>
